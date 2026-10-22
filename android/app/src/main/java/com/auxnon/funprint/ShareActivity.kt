@@ -35,7 +35,7 @@ class ShareActivity : Activity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (requestCode != REQ_PERMISSIONS) return
-        if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+        if (bluetoothPermissions().all { checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }) {
             ensureBluetoothOn()
         } else {
             done("Print needs Bluetooth permission")
@@ -98,13 +98,23 @@ class ShareActivity : Activity() {
         return (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).uri }
     }
 
+    private fun bluetoothPermissions(): List<String> = if (Build.VERSION.SDK_INT >= 31) {
+        listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
+    } else {
+        listOf(Manifest.permission.ACCESS_FINE_LOCATION) // needed to scan before Android 12
+    }
+
+    /**
+     * Bluetooth is required. Notifications are optional, but without them Android 13+ hides
+     * the service's "Printed" toast, so ask for them in the same first-run prompt.
+     */
     private fun missingPermissions(): Array<String> {
-        val needed = if (Build.VERSION.SDK_INT >= 31) {
-            arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
-        } else {
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION) // needed to scan before Android 12
-        }
-        return needed.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }.toTypedArray()
+        val bluetooth = bluetoothPermissions().filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+        if (bluetooth.isEmpty()) return emptyArray()
+        val notifications = Manifest.permission.POST_NOTIFICATIONS
+        val askNotifications = Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(notifications) != PackageManager.PERMISSION_GRANTED
+        return (bluetooth + listOfNotNull(notifications.takeIf { askNotifications })).toTypedArray()
     }
 
     private fun adapter(): BluetoothAdapter? = getSystemService(BluetoothManager::class.java)?.adapter

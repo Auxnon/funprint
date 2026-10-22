@@ -64,8 +64,13 @@ Android share sheet. Share one or more images to it and they print; a toast says
 as the CLI: it connects to the remembered printer, and only scans if there isn't one
 or it can't be reached, then remembers what it found.
 
-The first share asks for the Bluetooth permission (and to turn Bluetooth on if it's
-off). A "Printing…" notification shows while the job runs.
+The first share asks for Bluetooth permission, and for notifications. Notifications
+are optional, but without them Android 13+ hides the final "Printed" toast. It also
+asks to turn Bluetooth on if it's off. A "Printing…" notification shows while the
+job runs.
+
+On Boox devices the system may "freeze" newly installed apps; sharing to **Print**
+still works, because picking it from the share sheet unfreezes it.
 
 Build it (JDK 17+ and the Android SDK; `ANDROID_HOME` set or `android/local.properties`):
 
