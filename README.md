@@ -56,6 +56,27 @@ nautilus -q   # restart Files
 Selecting one or more images and choosing **Print** prints them in order, with a
 desktop notification for each result.
 
+## Android: "Print" share target
+
+`android/` is a tiny app (no launcher icon, no UI) that adds **Print** to the
+Android share sheet. Share one or more images to it and they print; a toast says
+"Printing…" and then "Printed" (or why it failed). It uses the same printer logic
+as the CLI: it connects to the remembered printer, and only scans if there isn't one
+or it can't be reached, then remembers what it found.
+
+The first share asks for the Bluetooth permission (and to turn Bluetooth on if it's
+off). A "Printing…" notification shows while the job runs.
+
+Build it (JDK 17+ and the Android SDK; `ANDROID_HOME` set or `android/local.properties`):
+
+```sh
+cd android
+./gradlew assembleRelease
+adb install app/build/outputs/apk/release/app-release.apk
+```
+
+The release build is signed with your local debug key so it can be sideloaded.
+
 ## Protocol notes
 
 Service `ae30`, write characteristic `ae01` (write without response), notify `ae02`.
